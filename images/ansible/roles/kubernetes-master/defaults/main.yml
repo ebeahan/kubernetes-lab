@@ -1,0 +1,14 @@
+---
+kubernetes_master:
+  kubeadm_config:
+    kubernetesVersion: 1.9.5
+    api:
+      advertiseAddress: "{{ kubernetes_common.api_ip }}"
+    apiServerExtraArgs:
+      "endpoint-reconciler-type": "lease"
+    apiServerCertSANs:
+      - "{{ kubernetes_common.api_fqdn }}"
+      - "{{ kubernetes_common.api_ip }}"
+    etcd:
+      endpoints: "{{ etcd_client_endpoints }}"
+    token: "{{ generated_token.stdout }}"

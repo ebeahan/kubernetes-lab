@@ -1,0 +1,69 @@
+{
+  "variables": {
+    "aws_access_key": "",
+    "aws_secret_key": "",
+    "build_version": null,
+    "kubernetes_verson": "1.10.3-00",
+    "kubernetes_cni_version": "0.6.0-00",
+    "existing_ansible_ssh_args": "{{env `ANSIBLE_SSH_ARGS`}}",
+    "vpc_id": "vpc-579bd130",
+    "subnet_id": "subnet-0385d958"
+  },
+  "builders": [
+    {
+      "name": "ami-ubuntu",
+      "type": "amazon-ebs",
+      "instance_type": "t2.small",
+      "source_ami": "{{user `ubuntu_18_04_ami`}}",
+      "ami_name": "ami-ubuntu-18.04-{{user `kubernetes_version`}}-{{timestamp}}",
+      "vpc_id": "{{user `vpc_id`}}",
+      "subnet_id": "{{user `subnet_id`}}",
+      "access_key": "{{user `aws_access_key`}}",
+      "secret_key": "{{user `aws_secret_key`}}",
+      "ssh_username": "ubuntu",
+      "tags": {
+        "build_version": "{{ user `build_version`}}",
+        "source_ami": "{{user `ubuntu_18_04_ami`}}",
+        "build_date": "{{isotime}}",
+        "distribution": "Ubuntu",
+        "distribution_release": "bionic",
+        "distribution_version": "18.04",
+        "kubernetes_version": "{{user `kubernetes_version`}}",
+        "kubernetes_cni_version": "{{user `kubernetes_cni_version`}}"
+      }
+    },
+    {
+      "name": "ami-centos",
+      "type": "amazon-ebs",
+      "instance_type": "t2.small",
+      "source_ami": "{{user `centos_7_4_ami`}}",
+      "ami_name": "ami-centos-7.4-{{user `kubernetes_version`}}-{{timestamp}}",
+      "access_key": "{{user `aws_access_key`}}",
+      "secret_key": "{{user `aws_secret_key`}}",
+      "ssh_username": "centos",
+      "tags": {
+        "build_version": "{{user `build_version`}}",
+        "source_ami": "{{user `centos_7_4_ami`}}",
+        "build_date": "{{isotime}}",
+        "distribution": "CentOS",
+        "distribution_release": "Core",
+        "distribution_version": "7.4",
+        "kubernetes_version": "{{user `kubernetes_version`}}",
+        "kubernetes_cni_version": "{{user `kubernetes_cni_version`}}"
+      }
+    }
+  ],
+  "provisioners": [
+    {
+      "type": "ansible",
+      "playbook_file": "../ansible/playbook.yml",
+      "ansible_env_vars": [
+        "ANSIBLE_SSH_ARGS='{{user `existing_ansible_ssh_args`}} -o IdentitiesOnly=yes'"
+      ],
+      "extra_arguments": [
+        "--extra-vars",
+        "common_upgrade_base=true kubernetes_version={{user `kubernetes_version`}} kubernetes_cni_version={{user `kubernetes_cni_version`}}"
+      ]
+    }
+  ]
+}
